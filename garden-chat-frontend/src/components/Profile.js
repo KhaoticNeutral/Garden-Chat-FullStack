@@ -22,7 +22,7 @@ function Profile({ username }) { // Component that takes in the username as a pr
     return (
         <div className="profile">
             <img
-                src="https://images.app.goo.gl/U8d63XzCsSiJALZW8" // Profile picture URL
+                // src="https://images.app.goo.gl/U8d63XzCsSiJALZW8" // Profile picture URL
                 alt="Profile"
                 className="profile-pic" // CSS class for styling the profile picture
             />

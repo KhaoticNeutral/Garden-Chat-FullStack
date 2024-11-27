@@ -9,8 +9,9 @@ const rootElement = document.getElementById('root');
 const root = ReactDOM.createRoot(rootElement);         // Create a root for the React app using React 18's `createRoot`
 
 // Render the React app
-root.render(
-    <AuthProvider>                                     // Wrap the app with AuthProvider for authentication state management
-        <App />                                        // Render the main App component as the root of the app
+root.render(// Wrap the app with AuthProvider for authentication state management
+            // Render the main App component as the root of the app
+    <AuthProvider>
+        <App />
     </AuthProvider>
 );

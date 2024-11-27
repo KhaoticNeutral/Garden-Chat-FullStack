@@ -28,5 +28,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue"); // Enables a simple in-memory message broker with specified prefixes
         config.setApplicationDestinationPrefixes("/app"); // Defines prefix for messages bound for methods annotated with @MessageMapping
+        System.out.println("WebSocket endpoint registered successfully!");
     }
 }

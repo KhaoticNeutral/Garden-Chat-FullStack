@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthProvider'; // Custom authentication hook for managing login state
 import axios from '../utils/axiosConfig'; // Configured Axios instance for API requests
+import WebSocketService from '../services/WebSocketService';
 
 function LoginPage() {
     // State hooks for managing login form inputs, error messages, and loading state
@@ -29,6 +30,7 @@ function LoginPage() {
             if (response.data.token) {
                 // If login is successful and a token is received
                 login(username, response.data.token); // Saves the token and username in context
+                WebSocketService.connect(); // Connect to WebSocket after successful login
                 navigate('/chat'); // Redirects to chat page upon successful login
             } else {
                 // If the response does not contain a token, display an error message

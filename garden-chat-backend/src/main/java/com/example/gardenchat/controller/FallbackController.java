@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class FallbackController {
 
     // Maps any URL path that doesn't contain a dot (typically indicating a file extension) to this method
-    @RequestMapping(value = "/{path:[^\\.]*}")
+    @RequestMapping(value = "/{path:^(?!.*\\.(?:css|js|jpg|png|gif|ico)$).*$}")
     public String redirect() {
         // Forwards the request to the "index.html" file in the application
         return "forward:/index.html";

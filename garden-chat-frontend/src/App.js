@@ -7,9 +7,10 @@ import ChatPage from './components/ChatPage';      // Import ChatPage component 
 import "./App.css";                               // Import custom CSS for styling the app
 
 function App() {
-    return (
-        <Router>                                    // Wrap the app inside Router component to enable routing
-            <Routes>                                 // Define the routes for different paths
+    return (// Wrap the app inside Router component to enable routing
+        // Define the routes for different paths
+        <Router>
+            <Routes>
                 <Route path="/login" element={<LoginPage />} />  {/* Define route for '/login' path to render LoginPage */}
                 <Route path="/register" element={<RegisterPage />} />  {/* Define route for '/register' path to render RegisterPage */}
                 <Route path="/chat" element={<ChatPage />} />  {/* Define route for '/chat' path to render ChatPage */}

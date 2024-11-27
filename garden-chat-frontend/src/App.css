@@ -1,5 +1,3 @@
-/* src/App.css */
-
 body {
     background-color: #e8f5e9;          /* Light green background color for the entire page */
     font-family: Arial, sans-serif;     /* Font style for all text on the page */
@@ -44,8 +42,8 @@ body {
     width: 80%;                         /* Takes up 80% of the page width */
     display: flex;                      /* Flex layout to allow stacked content */
     flex-direction: column;             /* Stack items vertically */
-    background: url('https://images.app.goo.gl/jA71P6ZzycdfCUn98') no-repeat center center;  /* Background image for chat section */
-    background-size: cover;             /* Cover entire area with background image */
+    /*background: url('https://images.app.goo.gl/jA71P6ZzycdfCUn98') no-repeat center center;  /* Background image for chat section */
+    /*background-size: cover;             /* Cover entire area with background image */
 }
 
 .profile {

@@ -5,11 +5,8 @@ import axios from 'axios'; // Import the Axios library for making HTTP requests
 const instance = axios.create({
     // Base URL for the backend API; all requests will be prefixed with this URL
     baseURL: 'http://localhost:8088/api',
-
+    withCredentials: true, // Allow cookies if needed
     // Default headers for all requests sent by this Axios instance
-    headers: {
-        'Content-Type': 'application/json',  // Set the content type to JSON
-    },
 });
 
 // Axios request interceptor to attach the authentication token to headers
@@ -21,7 +18,10 @@ instance.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
-
+    // Only set JSON content type for API requests
+    if (!config.url.endsWith('.css') && !config.url.endsWith('.js')) {
+        config.headers['Content-Type'] = 'application/json';
+    }
     // Return the modified config to proceed with the request
     return config;
 });
