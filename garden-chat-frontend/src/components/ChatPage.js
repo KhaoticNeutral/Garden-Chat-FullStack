@@ -3,133 +3,138 @@
 // Import necessary dependencies from React, router, and services
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import WebSocketService from '../services/WebSocketService'; // Custom WebSocket service for managing connections and messaging
-import Sidebar from './Sidebar'; // Sidebar component for displaying chat groups and online users
-import Profile from './Profile'; // Profile component to show the user's profile info
+import WebSocketService from '../services/WebSocketService'; // WebSocket service for connections and messaging
+import Sidebar from './Sidebar'; // Sidebar for chat groups and online users
+import Profile from './Profile'; // Profile component for user info
 
 function ChatPage() {
     // State hooks for managing chat data
     const [messages, setMessages] = useState([]); // Stores all chat messages
-    const [newMessage, setNewMessage] = useState(''); // Stores the message currently being typed
-    const [selectedGroup, setSelectedGroup] = useState('general'); // Stores the currently selected group
-    const [onlineUsers, setOnlineUsers] = useState([]); // Stores the list of online users
-    const [groups, setGroups] = useState(['general', 'gardening-tips', 'plant-care']); // List of chat groups
-    const [typing, setTyping] = useState(false); // Indicates whether the user is currently typing
-    const [typingMessage, setTypingMessage] = useState(''); // Message to display when another user is typing
-    const [errorMessage, setErrorMessage] = useState(null); // Stores error messages (e.g., connection issues)
+    const [newMessage, setNewMessage] = useState(''); // Message being typed
+    const [selectedGroup, setSelectedGroup] = useState('general'); // Current chat group
+    const [onlineUsers, setOnlineUsers] = useState([]); // List of online users
+    const [groups, setGroups] = useState(['general', 'gardening-tips', 'plant-care']); // Chat groups
+    const [typingMessage, setTypingMessage] = useState(''); // Displayed typing indicator
+    const [errorMessage, setErrorMessage] = useState(null); // Connection error message
 
-    // Retrieve the username from local storage
+    // Retrieve the username from localStorage
     const username = localStorage.getItem('username');
     const navigate = useNavigate(); // Hook to programmatically navigate between routes
 
     // Redirect to login if no username is found
     useEffect(() => {
         if (!username) {
+            console.error("[ChatPage Error] Username not found. Redirecting to login...");
             navigate('/login');
         }
     }, [username, navigate]);
 
-    // Function to add a new group to the list of groups
-    const createGroup = (groupName) => {
-        if (!groups.includes(groupName) && groupName.trim()) {
-            setGroups([...groups, groupName]); // Add the new group to the groups array
-            setSelectedGroup(groupName); // Automatically switch to the new group
-        }
-    };
-
-    // Initialize messages, connect WebSocket, and handle new messages and user presence
+    // Connect WebSocket and handle subscriptions
     useEffect(() => {
-        const notificationSound = new Audio('/notification.mp3'); // Audio alert for new messages
+        if (!username) return; // Prevent WebSocket connection without a valid username
+
+        const notificationSound = new Audio('/notification.mp3'); // Sound for new messages
         const savedMessages = JSON.parse(localStorage.getItem('messages')) || []; // Retrieve stored messages
-        setMessages(savedMessages); // Set messages from local storage if any exist
+        setMessages(savedMessages); // Initialize state with stored messages
+
+        const handleNewMessage = (message) => {
+            if (message.group === selectedGroup) {
+                const updatedMessages = [...messages, message];
+                setMessages(updatedMessages); // Update messages state
+                localStorage.setItem('messages', JSON.stringify(updatedMessages)); // Persist messages
+                if (message.sender !== username) {
+                    notificationSound.play(); // Play sound for new messages
+                }
+            }
+        };
+
+        const handleUserUpdates = (users) => {
+            setOnlineUsers(users); // Update online users
+        };
 
         try {
-            // Connect WebSocket and set up message handler
-            WebSocketService.connect(
-                (message) => {
-                    // Only add the message if it's for the selected group
-                    if (message.group === selectedGroup) {
-                        const updatedMessages = [...messages, message];
-                        setMessages(updatedMessages); // Update messages state
-                        localStorage.setItem('messages', JSON.stringify(updatedMessages)); // Persist messages
-                        if (message.sender !== username) {
-                            notificationSound.play(); // Play notification sound for messages from others
-                        }
-                    }
-                },
-                (users) => setOnlineUsers(users) // Update online users list
-            );
-
+            WebSocketService.connect(handleNewMessage, handleUserUpdates); // Connect WebSocket
             WebSocketService.sendUserPresence(username); // Notify server of the user's presence
         } catch (error) {
-            console.error('WebSocket connection error:', error); // Log connection errors
-            setErrorMessage("Connection lost. Trying to reconnect..."); // Display error message
+            console.error("[ChatPage Error] WebSocket connection failed:", error);
+            setErrorMessage("Connection lost. Trying to reconnect...");
         }
 
-        return () => WebSocketService.disconnect(); // Disconnect WebSocket on cleanup
-    }, [selectedGroup, username, messages]);
+        // Cleanup on unmount
+        return () => {
+            WebSocketService.disconnect();
+        };
+    }, [selectedGroup, username]);
 
-    // Handle typing status and send updates
+    // Handle typing status and notifications
+    useEffect(() => {
+        WebSocketService.onTyping((user) => {
+            if (user !== username) {
+                setTypingMessage(`${user} is typing...`);
+            }
+        });
+
+        const typingTimeout = setTimeout(() => setTypingMessage(''), 3000); // Clear typing indicator after 3 seconds
+        return () => clearTimeout(typingTimeout);
+    }, [username]);
+
+    // Send typing status when the user types
     const handleTyping = (e) => {
-        setNewMessage(e.target.value); // Update the message being typed
-        if (!typing) {
-            setTyping(true); // Indicate that user started typing
-            WebSocketService.sendTypingStatus(username, selectedGroup); // Notify others in the group
+        setNewMessage(e.target.value); // Update the input field
+        if (e.target.value.trim()) {
+            WebSocketService.sendTypingStatus(username, selectedGroup); // Notify others
         }
     };
 
-    // Handle typing notifications from other users
-    useEffect(() => {
-        WebSocketService.onTyping((user) => {
-            setTypingMessage(`${user} is typing...`); // Display who is typing
-        });
-
-        const typingTimeout = setTimeout(() => setTypingMessage(''), 3000); // Clear typing message after 3 seconds
-        return () => clearTimeout(typingTimeout); // Clear timeout on cleanup
-    }, []);
-
-    // Send a new message and clear the input field
+    // Send a new message
     const sendMessage = () => {
-        if (newMessage.trim()) { // Ensure message is not empty
+        if (newMessage.trim()) {
             const message = {
                 sender: username,
                 content: newMessage,
                 group: selectedGroup,
             };
-            WebSocketService.sendMessage(message); // Send message via WebSocket
-            setNewMessage(''); // Clear the message input
-            setTyping(false); // Reset typing status
+            WebSocketService.sendMessage(message); // Send message to server
+            setNewMessage(''); // Clear input
         }
     };
 
-    // Render chat interface
+    // Add a new group
+    const createGroup = (groupName) => {
+        if (!groups.includes(groupName) && groupName.trim()) {
+            setGroups([...groups, groupName]); // Add group
+            setSelectedGroup(groupName); // Switch to new group
+        }
+    };
+
+    // Render the chat interface
     return (
         <div className="chat-page">
-            {errorMessage && <div className="error-message">{errorMessage}</div>} {/* Show error message if any */}
+            {errorMessage && <div className="error-message">{errorMessage}</div>} {/* Display errors */}
             <Sidebar
                 groups={groups}
                 selectGroup={setSelectedGroup}
                 onlineUsers={onlineUsers}
                 createGroup={createGroup}
-            /> {/* Sidebar for group selection and user management */}
+            />
             <div className="chat-section">
-                <Profile username={username} /> {/* Displays user's profile */}
+                <Profile username={username} />
                 <div className="message-list">
                     {messages.map((msg, index) => (
                         <div key={index} className="message">
-                            <p><strong>{msg.sender}:</strong> {msg.content}</p> {/* Display each message */}
+                            <p><strong>{msg.sender}:</strong> {msg.content}</p>
                         </div>
                     ))}
-                    {typingMessage && <div className="typing-indicator">{typingMessage}</div>} {/* Display typing indicator */}
+                    {typingMessage && <div className="typing-indicator">{typingMessage}</div>}
                 </div>
                 <div className="input-bar">
                     <input
                         type="text"
                         placeholder="Type your message..."
                         value={newMessage}
-                        onChange={handleTyping} // Trigger typing events on change
+                        onChange={handleTyping}
                     />
-                    <button onClick={sendMessage}>Send</button> {/* Button to send message */}
+                    <button onClick={sendMessage}>Send</button>
                 </div>
             </div>
         </div>

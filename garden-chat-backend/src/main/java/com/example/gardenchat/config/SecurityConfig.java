@@ -13,14 +13,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable() // Disable CSRF for stateless APIs
+                .csrf().disable() // CSRF is often disabled for stateless APIs
                 .authorizeRequests()
-                .requestMatchers("/ws/**").authenticated() // Secure WebSocket endpoint
-                .anyRequest().permitAll() // Allow all other requests
+                .requestMatchers("/ws/**").permitAll() // Allow WebSocket connections
+                .anyRequest().permitAll()
                 .and()
-                .formLogin() // Optionally add login form
-                .permitAll();
-
+                .cors(); // Enable CORS globally
         return http.build();
     }
 }

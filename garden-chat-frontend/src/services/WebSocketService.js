@@ -1,80 +1,96 @@
 // src/services/WebSocketService.js
-import { Stomp } from '@stomp/stompjs';    // Import Stomp client library
-import SockJS from 'sockjs-client';        // Import SockJS for WebSocket fallback support
-
-// Define the WebSocket endpoint URL (adjustable based on backend server location)
-// const URL = 'http://localhost:8088/ws';
+import { Stomp } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 class WebSocketService {
     constructor() {
         this.stompClient = null;
-        this.typingCallback = null;
         this.isConnected = false;
-        this.reconnectDelay = 5000;  // Customizable reconnect delay
+        this.typingCallback = null;
+        this.reconnectDelay = 5000; // Delay in ms for automatic reconnection
     }
 
     async connect(onMessageReceived, onUsersUpdated) {
         if (this.isConnected) {
-            console.log("Already connected to WebSocket.");
+            console.log("[STOMP Info] Already connected to WebSocket.");
             return;
         }
 
-        try {
-            const socketFactory = () => new SockJS('http://localhost:8088/ws');
-            this.stompClient = Stomp.over(socketFactory);
-            
-            await new Promise((resolve, reject) => {
-                this.stompClient.connect({}, (frame) => {
-                    console.log('Connected: ' + frame);
-                    this.isConnected = true;
-                    this._setupSubscriptions(onMessageReceived, onUsersUpdated);
-                    resolve(frame);
-                }, (error) => {
-                    console.error("STOMP connection error: ", error);
-                    reject(error);
-                });
+        console.log("[STOMP Debug] Initiating WebSocket connection...");
+        const socketFactory = () => new SockJS('http://localhost:8088/ws');
+        this.stompClient = Stomp.over(socketFactory);
+
+        // Configure heartbeats
+        this.stompClient.heartbeatIncoming = 10000; // Expect a heartbeat from the server every 10 seconds
+        this.stompClient.heartbeatOutgoing = 10000; // Send a heartbeat to the server every 10 seconds
+
+        // Add debug logs for STOMP lifecycle
+        this.stompClient.debug = (str) => console.log(`[STOMP Debug] ${str}`);
+        this.stompClient.onStompError = (frame) => {
+            console.error("[STOMP Error] Broker error:", frame.headers['message']);
+        };
+
+        // Attempt connection with a fallback timeout
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                console.warn("[STOMP Warning] Connection timeout, proceeding without STOMP.");
+                resolve(); // Proceed even if STOMP fails
+            }, 5000); // 5-second fallback
+
+            this.stompClient.connect({}, (frame) => {
+                clearTimeout(timeout); // Clear fallback timeout
+                console.log("[STOMP Connected] Frame received:", frame);
+                this.isConnected = true;
+
+                // Set up subscriptions if necessary
+                this._setupSubscriptions(onMessageReceived, onUsersUpdated);
+                resolve();
+            }, (error) => {
+                clearTimeout(timeout); // Clear timeout on error
+                console.error("[STOMP Error] Connection failed:", error);
+                reject(error);
             });
+        });
+    }
 
-            this.stompClient.reconnectDelay = this.reconnectDelay;
-            this.stompClient.debug = (str) => console.log(str);
-
-            this.stompClient.onStompError = (frame) => {
-                console.error('Broker reported error: ' + frame.headers['message']);
-                console.error('Additional details: ' + frame.body);
-            };
-
-        } catch (error) {
-            console.error("Connection failed, will retry in " + this.reconnectDelay + "ms.");
-            setTimeout(() => this.connect(onMessageReceived, onUsersUpdated), this.reconnectDelay);
+    _setupSubscriptions(onMessageReceived, onUsersUpdated) {
+        if (this.stompClient && this.stompClient.connected) {
+            console.log("[STOMP Info] Setting up subscriptions...");
+    
+            // Subscribe to messages
+            this.stompClient.subscribe('/topic/messages', (message) => {
+                console.log("[STOMP Debug] Message received:", message);
+                onMessageReceived(JSON.parse(message.body));
+            });
+    
+            // Subscribe to online users
+            this.stompClient.subscribe('/topic/online-users', (users) => {
+                console.log("[STOMP Debug] Online users updated:", users);
+                if (onUsersUpdated) {
+                    onUsersUpdated(JSON.parse(users.body));
+                }
+            });
+    
+            // Subscribe to typing notifications
+            this.stompClient.subscribe('/topic/typing', (typingStatus) => {
+                console.log("[STOMP Debug] Typing status received:", typingStatus);
+                if (this.typingCallback) {
+                    const { username } = JSON.parse(typingStatus.body);
+                    this.typingCallback(username);
+                }
+            });
+    
+            console.log("[STOMP Info] Subscriptions successfully set up.");
+        } else {
+            console.error("[STOMP Warning] STOMP client not connected. Retrying subscriptions...");
+            setTimeout(() => this._setupSubscriptions(onMessageReceived, onUsersUpdated), 1000); // Retry after 1 second
         }
     }
 
-    // Set up actions to be taken once the connection is successful
-    _setupSubscriptions(onMessageReceived, onUsersUpdated) {
-        // Subscribe to messages topic to receive chat messages
-        this.stompClient.subscribe('/topic/messages', (message) => {
-            onMessageReceived(JSON.parse(message.body));  // Invoke the provided callback with the parsed message
-        });
-
-        // Subscribe to the online-users topic to get updates on online users
-        this.stompClient.subscribe('/topic/online-users', (users) => {
-            if (onUsersUpdated) {
-                onUsersUpdated(JSON.parse(users.body));  // Invoke the provided callback with the updated user list
-            }
-        });
-
-        // Subscribe to typing topic to receive typing notifications
-        this.stompClient.subscribe('/topic/typing', (typingStatus) => {
-            if (this.typingCallback) {
-                const { username } = JSON.parse(typingStatus.body); // Parse typing status
-                this.typingCallback(username);  // Invoke typing callback with username
-            }
-        });
-    }
-
-    // Set up the callback function for typing notifications
+    // Set the callback for typing notifications
     onTyping(callback) {
         this.typingCallback = callback; // Assign the provided callback to typingCallback
+        console.log("[STOMP Info] Typing callback set.");
     }
 
     // Send typing status to the server for a specific group
@@ -82,8 +98,11 @@ class WebSocketService {
         if (this.stompClient && this.stompClient.connected) {
             this.stompClient.publish({
                 destination: '/app/typing',
-                body: JSON.stringify({ username, group })
+                body: JSON.stringify({ username, group }),
             });
+            console.log("[STOMP Info] Sent typing status for user:", username);
+        } else {
+            console.error("[STOMP Warning] Cannot send typing status. STOMP client not connected.");
         }
     }
 
@@ -92,8 +111,11 @@ class WebSocketService {
         if (this.stompClient && this.stompClient.connected) {
             this.stompClient.publish({
                 destination: '/app/chat',
-                body: JSON.stringify(message)
+                body: JSON.stringify(message),
             });
+            console.log("[STOMP Info] Message sent:", message);
+        } else {
+            console.error("[STOMP Warning] Cannot send message. STOMP client not connected.");
         }
     }
 
@@ -102,19 +124,24 @@ class WebSocketService {
         if (this.stompClient && this.stompClient.connected) {
             this.stompClient.publish({
                 destination: '/app/online',
-                body: JSON.stringify({ username })
+                body: JSON.stringify({ username }),
             });
+            console.log("[STOMP Info] User presence sent for:", username);
+        } else {
+            console.error("[STOMP Warning] Cannot send user presence. STOMP client not connected.");
         }
     }
 
     // Disconnect the WebSocket client
     disconnect() {
-        if (this.stompClient) {
-            this.stompClient.deactivate(); // Properly close the connection
-            this.isConnected = false;  // Reset connection state
+        if (this.isConnected) {
+            console.log("[STOMP Debug] Disconnecting WebSocket...");
+            this.stompClient.deactivate(); // Gracefully close the connection
+            this.isConnected = false; // Reset connection state
+        } else {
+            console.log("[STOMP Info] WebSocket already disconnected.");
         }
     }
 }
 
-// Export a singleton instance of WebSocketService to be used across the app
 export default new WebSocketService();
