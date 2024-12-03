@@ -65,7 +65,7 @@ public class UserController {
     }
 
     // Endpoint to update a user's profile icon
-    @PutMapping("/{username}/profile-icon")
+    /*@PutMapping("/{username}/profile-icon")
     public ResponseEntity<String> updateProfileIcon(@PathVariable String username, @RequestBody String profileIcon) {
         // Find the user by username
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
@@ -81,5 +81,5 @@ public class UserController {
             // If user not found, return HTTP 404 Not Found with a message
             return ResponseEntity.status(404).body("User not found");
         }
-    }
+    }*/
 }

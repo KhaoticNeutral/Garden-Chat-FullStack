@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     // Function to log in the user
     const login = (username, token) => {
         // Create user data with username and token
-        const userData = { username, token };
+        const userData  = { username, token };
         setUser(userData);  // Update state with user data
         // Save user data to localStorage for session persistence
         localStorage.setItem('user', JSON.stringify(userData));

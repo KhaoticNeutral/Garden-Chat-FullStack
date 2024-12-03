@@ -22,5 +22,5 @@ public class User {
     private String password; // Password for the user's account
 
     // Field for the profile icon URL or path
-    private String profileIcon; // URL or path to the user's profile icon image
+    //private String profileIcon; // URL or path to the user's profile icon image
 }

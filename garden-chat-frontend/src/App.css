@@ -1,10 +1,20 @@
-/* src/App.css */
-
 body {
     background-color: #e8f5e9;          /* Light green background color for the entire page */
     font-family: Arial, sans-serif;     /* Font style for all text on the page */
     margin: 0;                          /* Remove default margin around the body */
-    padding: 0;                         /* Remove default padding around the body */
+    padding: 0;
+    background-size: 100%;             /* Remove default padding around the body */
+    height: 100%;
+    width: 100%;
+}
+
+.login-page, .register-page, .chat-page {
+    background: url('assets/images/garden-pattern.jpg') no-repeat center center fixed;
+    background-size: cover;
+    height: 100vh; /* Full-screen height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Chat Page Styles */
@@ -16,6 +26,7 @@ body {
 
 .sidebar {
     width: 20%;                         /* Sidebar takes up 20% of the horizontal space */
+    height: 87.4%;
     background-color: #388e3c;          /* Dark green background for the sidebar */
     color: white;                       /* White text color */
     padding: 10px;                      /* Padding inside the sidebar */
@@ -26,13 +37,40 @@ body {
     margin: 10px 0;                     /* Margin between sidebar headings and items */
 }
 
+.group {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.group-item {
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.group-item:hover {
+    background-color: #f0f0f0;
+}
+
+.group-item.selected {
+    background-color: lightpink;
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
+}
+
+.group.selected {
+    font-weight: bold;
+    color: pink;
+}
+
 .sidebar .create-group-btn {
     background-color: #4caf50;          /* Green background for the "Create Group" button */
     color: white;                       /* White text */
     border: none;                       /* Remove border */
     border-radius: 5px;                 /* Rounded corners */
     padding: 5px 10px;                  /* Padding for button content */
-    margin-top: 15px;                   /* Top margin to separate from previous content */
+    margin: 0;                   /* Top margin to separate from previous content */
     cursor: pointer;                    /* Pointer cursor on hover */
 }
 
@@ -41,11 +79,16 @@ body {
 }
 
 .chat-section {
-    width: 80%;                         /* Takes up 80% of the page width */
+    background: none;
+    width: 90%;                         /* Takes up 80% of the page width */
+    height: 90%;
     display: flex;                      /* Flex layout to allow stacked content */
     flex-direction: column;             /* Stack items vertically */
-    background: url('https://images.app.goo.gl/jA71P6ZzycdfCUn98') no-repeat center center;  /* Background image for chat section */
-    background-size: cover;             /* Cover entire area with background image */
+<<<<<<< HEAD
+=======
+    /*background: url('https://images.app.goo.gl/jA71P6ZzycdfCUn98') no-repeat center center;  /* Background image for chat section */
+    /*background-size: cover;             /* Cover entire area with background image */
+>>>>>>> b86cc1f1355f0f06de7269ee6fd39a0177d5bb39
 }
 
 .profile {
@@ -56,17 +99,11 @@ body {
     color: white;                       /* White text color */
 }
 
-.profile img {
-    width: 25px;                        /* Profile picture width */
-    height: 25px;                       /* Profile picture height */
-    border-radius: 50%;                 /* Circular profile picture */
-    margin-right: 10px;                 /* Space between image and text */
-}
 
 .profile .logout-btn {
-    background-color: #388e3c;          /* Dark green background */
+    background-color: #4caf50;          /* Dark green background */
     color: white;                       /* White text color */
-    border: none;                       /* No border */
+    border: #4caf50;                       /* No border */
     padding: 5px 10px;                  /* Padding for button */
     margin-top: 5px;                    /* Top margin */
     cursor: pointer;                    /* Pointer cursor on hover */
@@ -109,6 +146,10 @@ body {
     border: none;                       /* No border */
     border-radius: 5px;                 /* Rounded corners */
     margin-right: 5px;                  /* Space between input and button */
+    resize: none;                       /* Prevent manual resizing */
+    overflow-y: auto;                    /* Enable vertical scrolling */
+    max-height: 100px;                  /* Limit input height */
+    line-height: 1.5;                   /* Ensure proper spacing */
 }
 
 .input-bar button {
@@ -144,7 +185,7 @@ body {
     justify-content: center;            /* Center vertically */
     height: 100vh;                      /* Full viewport height */
     background: url('assets/images/garden-pattern.jpg') no-repeat center center;  /* Background image */
-    background-size: auto;              /* Background image maintains aspect ratio */
+    background-size: cover;              /* Background image maintains aspect ratio */
     color: #ffff;                       /* White text color */
 }
 

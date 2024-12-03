@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthProvider'; // Custom authentication hook for managing login state
 import axios from '../utils/axiosConfig'; // Configured Axios instance for API requests
+import WebSocketService from '../services/WebSocketService';
 
 function LoginPage() {
     // State hooks for managing login form inputs, error messages, and loading state
@@ -19,26 +20,35 @@ function LoginPage() {
 
     // Function to handle form submission and login
     const handleLogin = async (e) => {
-        e.preventDefault(); // Prevents default form submission behavior
-        setLoading(true); // Sets loading state to true while login request is in progress
-        setError(null); // Clears any previous error messages
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
 
         try {
-            // Sends a POST request to the login endpoint with username and password
+            // Login API request
             const response = await axios.post('/users/login', { username, password });
             if (response.data.token) {
-                // If login is successful and a token is received
-                login(username, response.data.token); // Saves the token and username in context
-                navigate('/chat'); // Redirects to chat page upon successful login
+                // Save user session
+                login(username, response.data.token);
+                localStorage.setItem('username', username);
+
+                // Initialize WebSocket
+                try {
+                    await WebSocketService.connect(() => {}, () => {});
+                } catch (wsError) {
+                    console.error("[Login Warning] STOMP connection delayed. Proceeding to chat...");
+                }
+
+                // Navigate to chat page
+                console.log("[Login Success] Navigating to chat page...");
+                navigate('/chat');
             } else {
-                // If the response does not contain a token, display an error message
                 setError("Login failed. Invalid response from server.");
             }
         } catch (err) {
-            // If there’s an error during the request, display a generic error message
             setError("Login failed. Please check your credentials.");
         } finally {
-            setLoading(false); // Resets loading state after request completes
+            setLoading(false);
         }
     };
 

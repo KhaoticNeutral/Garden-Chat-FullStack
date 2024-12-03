@@ -1,63 +1,65 @@
-// src/components/Sidebar.js
 import React, { useState } from 'react';
 
-// Sidebar component to display chat groups and online users, as well as options to create new groups
 function Sidebar({ groups, selectGroup, onlineUsers, createGroup }) {
-    // State to control the visibility of the "Create Group" modal
-    const [showModal, setShowModal] = useState(false);
+    const [selectedGroup, setSelectedGroup] = useState(groups[0]); // Default to the first group
+    const [showModal, setShowModal] = useState(false); // Manage modal visibility
+    const [newGroupName, setNewGroupName] = useState(''); // New group input state
 
-    // State to hold the new group name entered by the user in the modal
-    const [newGroupName, setNewGroupName] = useState('');
+    const handleGroupClick = (group) => {
+        setSelectedGroup(group); // Update selected group in state
+        selectGroup(group); // Notify parent about selection
+    };
 
-    // Function to handle the creation of a new group
     const handleCreateGroup = () => {
-        createGroup(newGroupName);   // Call the provided createGroup function with the new group name
-        setShowModal(false);         // Close the modal after creating the group
-        setNewGroupName('');         // Reset the input field for group name
+        if (newGroupName.trim() && !groups.includes(newGroupName)) {
+            createGroup(newGroupName); // Create the new group
+            setNewGroupName(''); // Reset input
+            setShowModal(false); // Close modal
+        }
     };
 
     return (
         <div className="sidebar">
-            {/* Displaying the list of chat groups */}
             <h3>Channels</h3>
-            {groups.map((group, index) => (
-                <p key={index} onClick={() => selectGroup(group)}>
-                    #{group}    {/* Display each group name prefixed with "#" */}
-                </p>
-            ))}
-
-            {/* Button to open the "Create Group" modal */}
+            <div className="group-list">
+                {groups.map((group, index) => (
+                    <p
+                        key={index}
+                        className={`group-item ${selectedGroup === group ? 'selected' : ''}`}
+                        onClick={() => handleGroupClick(group)}
+                    >
+                        #{group}
+                    </p>
+                ))}
+            </div>
             <button onClick={() => setShowModal(true)} className="create-group-btn">
                 + Create Group
             </button>
-
-            {/* Modal to input the name for a new group */}
             {showModal && (
                 <div className="modal">
                     <div className="modal-content">
                         <h4>Create New Group</h4>
-                        {/* Input for the new group name */}
                         <input
                             type="text"
                             placeholder="Group Name"
                             value={newGroupName}
-                            onChange={(e) => setNewGroupName(e.target.value)}   // Update state as user types
+                            onChange={(e) => setNewGroupName(e.target.value)}
                         />
-                        {/* Button to create the group */}
                         <button onClick={handleCreateGroup}>Create</button>
-                        {/* Button to cancel and close the modal */}
                         <button onClick={() => setShowModal(false)}>Cancel</button>
                     </div>
                 </div>
             )}
-
-            {/* Displaying the list of online users */}
             <h3>Online Users</h3>
-            {onlineUsers.map((user, index) => (
-                <p key={index} className="online-user">
-                    {user}  {/* Display each online user's name */}
-                </p>
-            ))}
+            <div className="online-users">
+                {onlineUsers.length > 0 ? (
+                    onlineUsers.map((user, index) => (
+                        <p key={index} className="online-user">{user}</p>
+                    ))
+                ) : (
+                    <p>No users online</p>
+                )}
+            </div>
         </div>
     );
 }
