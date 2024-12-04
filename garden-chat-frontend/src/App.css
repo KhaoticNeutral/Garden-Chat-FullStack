@@ -84,11 +84,6 @@ body {
     height: 90%;
     display: flex;                      /* Flex layout to allow stacked content */
     flex-direction: column;             /* Stack items vertically */
-<<<<<<< HEAD
-=======
-    /*background: url('https://images.app.goo.gl/jA71P6ZzycdfCUn98') no-repeat center center;  /* Background image for chat section */
-    /*background-size: cover;             /* Cover entire area with background image */
->>>>>>> b86cc1f1355f0f06de7269ee6fd39a0177d5bb39
 }
 
 .profile {
@@ -224,3 +219,4 @@ body {
     color: #d32f2f;                     /* Red color for error messages */
     margin-bottom: 10px;                /* Space below error message */
 }
+

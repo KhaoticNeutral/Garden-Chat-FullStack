@@ -6,10 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import WebSocketService from '../services/WebSocketService'; // WebSocket service for connections and messaging
 import Sidebar from './Sidebar'; // Sidebar for chat groups and online users
 import Profile from './Profile'; // Profile component for user info
-<<<<<<< HEAD
-
-=======
->>>>>>> b86cc1f1355f0f06de7269ee6fd39a0177d5bb39
 
 function ChatPage() {
     // State hooks for managing chat data
@@ -39,7 +35,7 @@ function ChatPage() {
 
         const notificationSound = new Audio('/notification.mp3'); // Sound for new messages
         const savedMessages = JSON.parse(localStorage.getItem('messages')) || []; // Retrieve stored messages
-<<<<<<< HEAD
+
         const filteredMessages = savedMessages.filter(msg => msg.group === selectedGroup);
         setMessages(filteredMessages); // Initialize state with stored messages
 
@@ -51,33 +47,32 @@ function ChatPage() {
                 if (message.group === selectedGroup) {
                     setMessages((prevMessages) => [...prevMessages, message]);
                 }
+            }
 
-=======
+
         setMessages(savedMessages); // Initialize state with stored messages
 
         const handleNewMessage = (message) => {
             if (message.group === selectedGroup) {
                 const updatedMessages = [...messages, message];
                 setMessages(updatedMessages); // Update messages state
->>>>>>> b86cc1f1355f0f06de7269ee6fd39a0177d5bb39
                 localStorage.setItem('messages', JSON.stringify(updatedMessages)); // Persist messages
                 if (message.sender !== username) {
                     notificationSound.play(); // Play sound for new messages
                 }
-<<<<<<< HEAD
+
                 return updatedMessages;
             });
         };
 
         const handleUserUpdates = (users) => {
-            setOnlineUsers(users); // Update the online users state
-=======
+            setOnlineUsers(users); // Update the online users stat
             }
         };
 
         const handleUserUpdates = (users) => {
             setOnlineUsers(users); // Update online users
->>>>>>> b86cc1f1355f0f06de7269ee6fd39a0177d5bb39
+
         };
 
         try {
@@ -161,16 +156,13 @@ function ChatPage() {
                         placeholder="Type your message..."
                         value={newMessage}
                         onChange={handleTyping}
-<<<<<<< HEAD
+
                         style={{ height: 'auto', maxHeight: '100px', overflowY: 'auto' }}
-=======
->>>>>>> b86cc1f1355f0f06de7269ee6fd39a0177d5bb39
-                    />
                     <button onClick={sendMessage}>Send</button>
                 </div>
             </div>
         </div>
     );
-}
+
 
 export default ChatPage; // Export component for use in other parts of the app
