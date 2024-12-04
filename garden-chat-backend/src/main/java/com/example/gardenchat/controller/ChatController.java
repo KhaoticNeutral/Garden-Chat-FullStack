@@ -4,6 +4,7 @@ import com.example.gardenchat.model.Message; // Import the Message entity/model
 import com.example.gardenchat.repository.MessageRepository; // Import the MessageRepository for data access
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 // Annotates this class as a Spring Controller to handle HTTP requests and WebSocket messages
 @Controller
@@ -20,6 +23,10 @@ public class ChatController {
     // Injects the MessageRepository for database operations related to Message entities
     @Autowired
     private MessageRepository messageRepository;
+
+
+    // Thread-safe Set to track online users
+    private final Set<String> onlineUsers = ConcurrentHashMap.newKeySet();
 
     // Handles GET requests for retrieving messages for a specific user
     @GetMapping("/{username}")
@@ -39,13 +46,45 @@ public class ChatController {
         return ResponseEntity.ok(savedMessage);
     }
 
-    // Handles WebSocket messages sent to "/chat" endpoint using STOMP protocol
-    @MessageMapping("/chat") // Defines the path for WebSocket messages from clients
-    @SendTo("/topic/messages") // Broadcasts the message to subscribers of "/topic/messages"
-    public Message broadcastMessage(Message message) {
-        message.setTimestamp(LocalDateTime.now()); // Sets the current timestamp for the message
-        messageRepository.save(message); // Saves the message to the database
-        // Returns the message, which will be sent to all subscribers of "/topic/messages"
+    @MessageMapping("/chat/{group}")
+    @SendTo("/topic/messages/{group}")
+    public Message broadcastMessage(@DestinationVariable String group, Message message) {
+        message.setTimestamp(LocalDateTime.now());
+        messageRepository.save(message);
+        System.out.println("Broadcasting message to group: " + group + " Message: " + message);
         return message;
     }
-}
+
+    @MessageMapping("/typing/{group}")
+    @SendTo("/topic/typing/{group}")
+    public String handleTypingNotification(@DestinationVariable String group, String typingUser) {
+        System.out.println("Typing notification for group: " + group + " User: " + typingUser);
+        return typingUser;
+    }
+
+        // WebSocket: Handle typing notifications
+       /*@MessageMapping("/typing")
+       @SendTo("/topic/typing")
+        public String handleTypingNotification(String typingUser) {
+        // Log for debugging purposes
+           System.out.println("Typing notification received from: " + typingUser);
+            return typingUser; // Broadcasts the username of the user typing
+        }*/
+
+        // WebSocket: Add user to online list and broadcast updated list
+        @MessageMapping("/online")
+        @SendTo("/topic/onlineUsers")
+        public Set<String> handleUserPresence(String username) {
+            System.out.println("User online: " + username);
+            onlineUsers.add(username);
+            return onlineUsers; // Broadcast updated list of online users
+        }
+        // WebSocket: Remove user from online list and broadcast updated list
+        @MessageMapping("/offline")
+        @SendTo("/topic/online-users")
+        public Set<String> handleUserOffline(String username) {
+            onlineUsers.remove(username);
+            return onlineUsers; // Broadcast updated list of online users
+        }
+    }
+

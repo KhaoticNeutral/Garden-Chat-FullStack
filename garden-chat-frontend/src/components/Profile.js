@@ -21,14 +21,6 @@ function Profile({ username }) { // Component that takes in the username as a pr
     // Render the profile section
     return (
         <div className="profile">
-<<<<<<< HEAD
-=======
-            <img
-                // src="https://images.app.goo.gl/U8d63XzCsSiJALZW8" // Profile picture URL
-                alt="Profile"
-                className="profile-pic" // CSS class for styling the profile picture
-            />
->>>>>>> b86cc1f1355f0f06de7269ee6fd39a0177d5bb39
             <div>
                 <p>{username}</p> {/* Display the username passed in as a prop */}
                 <button onClick={handleLogout} className="logout-btn">Logout</button> {/* Logout button with onClick handler */}
