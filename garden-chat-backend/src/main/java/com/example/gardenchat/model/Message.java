@@ -24,4 +24,6 @@ public class Message {
 
     // Field for the timestamp of the message
     private LocalDateTime timestamp; // Date and time when the message was sent
+
+    private String group;
 }

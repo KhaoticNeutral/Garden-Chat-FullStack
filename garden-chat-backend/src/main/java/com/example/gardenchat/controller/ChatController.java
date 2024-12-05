@@ -50,6 +50,7 @@ public class ChatController {
     @SendTo("/topic/messages/{group}")
     public Message broadcastMessage(@DestinationVariable String group, Message message) {
         message.setTimestamp(LocalDateTime.now());
+        message.setGroup(group);
         messageRepository.save(message);
         System.out.println("Broadcasting message to group: " + group + " Message: " + message);
         return message;
