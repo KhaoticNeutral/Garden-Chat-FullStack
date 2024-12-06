@@ -211,7 +211,7 @@ function ChatPage() {
             <Sidebar
                 groups={groups}
                 selectGroup={setSelectedGroup}
-                onlineUsers={onlineUsers}
+                //onlineUsers={onlineUsers}
                 createGroup={createGroup}
             />
             <div className="chat-section">

@@ -50,16 +50,7 @@ function Sidebar({ groups, selectGroup, onlineUsers, createGroup }) {
                     </div>
                 </div>
             )}
-            <h3>Online Users</h3>
-            <div className="online-users">
-                {onlineUsers.length > 0 ? (
-                    onlineUsers.map((user, index) => (
-                        <p key={index} className="online-user">{user}</p>
-                    ))
-                ) : (
-                    <p>No users online</p>
-                )}
-            </div>
+
         </div>
     );
 }
